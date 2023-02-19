@@ -2,7 +2,7 @@
 
 #include "iCollisionBody.h"
 
-#include "Math.h"
+#include "GLMath.h"
 
 namespace physics
 {

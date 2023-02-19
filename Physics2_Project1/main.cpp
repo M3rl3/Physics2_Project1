@@ -466,11 +466,11 @@ void Render() {
     player_mesh = new cMeshInfo();
     player_mesh->meshName = "player";
     player_mesh->friendlyName = "player";
-    player_mesh->hasTexture = false;
+    player_mesh->hasTexture = true;
     player_mesh->RGBAColour = glm::vec4(100.f, 1.f, 1.f, 1.f);
-    player_mesh->useRGBAColour = true;
+    player_mesh->useRGBAColour = false;
     player_mesh->drawBBox = true;
-    player_mesh->textures[0] = "man.bmp";
+    player_mesh->textures[0] = "basketball_sph.bmp";
     player_mesh->textureRatios[0] = 1.f;
     player_mesh->CopyVertices(player_obj);
     meshArray.push_back(player_mesh);
@@ -547,9 +547,9 @@ void Render() {
         std::cout << "Error: failed to load player texture.";
     }
     
-    if (TextureMan->Create2DTextureFromBMPFile("mememan.bmp"))
+    if (TextureMan->Create2DTextureFromBMPFile("basketball_sph.bmp"))
     {
-        std::cout << "Loaded computer texture." << std::endl;
+        std::cout << "Loaded football_texture.bmp texture." << std::endl;
     }
     else 
     {
@@ -568,6 +568,7 @@ void Render() {
     // reads scene descripion files for positioning and other info
     ReadSceneDescription();
 
+    player_mesh->SetUniformScale(2.5f);
     {
         flat_plain->rotation.x = 0.f;
         flat_plain->rotation.y = 67.55f;

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "iShape.h"
-#include "Math.h"
+#include "GLMath.h"
 
 namespace physics
 {

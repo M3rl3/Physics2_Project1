@@ -1,105 +1,103 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Interfaces">
+    <Filter Include="interfaces">
       <UniqueIdentifier>{50d0b8c9-76f0-4dd1-bfae-847dc506651c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="include">
+      <UniqueIdentifier>{66c6ed96-55cd-4ff1-ae55-f89865823f5b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{bc948677-9566-4c46-a914-c4144c311900}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="PhysicsFactory.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="interfaces\BodyType.h">
-      <Filter>Interfaces</Filter>
+      <Filter>interfaces</Filter>
     </ClInclude>
     <ClInclude Include="interfaces\BoxShape.h">
-      <Filter>Interfaces</Filter>
+      <Filter>interfaces</Filter>
     </ClInclude>
     <ClInclude Include="interfaces\CylinderShape.h">
-      <Filter>Interfaces</Filter>
+      <Filter>interfaces</Filter>
     </ClInclude>
     <ClInclude Include="interfaces\iCollisionBody.h">
-      <Filter>Interfaces</Filter>
+      <Filter>interfaces</Filter>
     </ClInclude>
     <ClInclude Include="interfaces\iPhysicsFactory.h">
-      <Filter>Interfaces</Filter>
+      <Filter>interfaces</Filter>
     </ClInclude>
     <ClInclude Include="interfaces\iPhysicsWorld.h">
-      <Filter>Interfaces</Filter>
+      <Filter>interfaces</Filter>
     </ClInclude>
     <ClInclude Include="interfaces\iRigidBody.h">
-      <Filter>Interfaces</Filter>
+      <Filter>interfaces</Filter>
     </ClInclude>
     <ClInclude Include="interfaces\iShape.h">
-      <Filter>Interfaces</Filter>
+      <Filter>interfaces</Filter>
     </ClInclude>
     <ClInclude Include="interfaces\iSoftBody.h">
-      <Filter>Interfaces</Filter>
+      <Filter>interfaces</Filter>
     </ClInclude>
-    <ClInclude Include="interfaces\Math.h">
-      <Filter>Interfaces</Filter>
+    <ClInclude Include="interfaces\GLMath.h">
+      <Filter>interfaces</Filter>
     </ClInclude>
     <ClInclude Include="interfaces\PlaneShape.h">
-      <Filter>Interfaces</Filter>
+      <Filter>interfaces</Filter>
     </ClInclude>
     <ClInclude Include="interfaces\RigidBodyDesc.h">
-      <Filter>Interfaces</Filter>
+      <Filter>interfaces</Filter>
     </ClInclude>
     <ClInclude Include="interfaces\ShapeType.h">
-      <Filter>Interfaces</Filter>
+      <Filter>interfaces</Filter>
     </ClInclude>
     <ClInclude Include="interfaces\SoftBodyDesc.h">
-      <Filter>Interfaces</Filter>
+      <Filter>interfaces</Filter>
     </ClInclude>
     <ClInclude Include="interfaces\SphereShape.h">
-      <Filter>Interfaces</Filter>
+      <Filter>interfaces</Filter>
     </ClInclude>
-    <ClInclude Include="PhysicsWorld.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\CollisionHandler.h">
+      <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="RigidBody.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\PhysicsFactory.h">
+      <Filter>include</Filter>
     </ClInclude>
-    <ClInclude Include="CollisionHandler.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\PhysicsWorld.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\RigidBody.h">
+      <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="interfaces\BoxShape.cpp">
-      <Filter>Interfaces</Filter>
+      <Filter>interfaces</Filter>
     </ClCompile>
     <ClCompile Include="interfaces\CylinderShape.cpp">
-      <Filter>Interfaces</Filter>
+      <Filter>interfaces</Filter>
     </ClCompile>
     <ClCompile Include="interfaces\PlaneShape.cpp">
-      <Filter>Interfaces</Filter>
+      <Filter>interfaces</Filter>
     </ClCompile>
     <ClCompile Include="interfaces\SphereShape.cpp">
-      <Filter>Interfaces</Filter>
+      <Filter>interfaces</Filter>
     </ClCompile>
-    <ClCompile Include="PhysicsFactory.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\CollisionHandler.cpp">
+      <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="PhysicsWorld.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\PhysicsFactory.cpp">
+      <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="RigidBody.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\PhysicsWorld.cpp">
+      <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="CollisionHandler.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="src\RigidBody.cpp">
+      <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
