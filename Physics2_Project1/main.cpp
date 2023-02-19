@@ -307,6 +307,7 @@ static void MouseCallBack(GLFWwindow* window, double xposition, double yposition
 }
 
 static void ScrollCallBack(GLFWwindow* window, double xoffset, double yoffset) {
+
     if (fov >= 1.f && fov <= 45.f) {
         fov -= yoffset;
     }
