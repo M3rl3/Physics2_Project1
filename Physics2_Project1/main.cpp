@@ -279,14 +279,26 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
             if (key == GLFW_KEY_W && action == GLFW_PRESS) {
                 direction.x += PLAYER_MOVE_SPEED;
             }
+            else if (key == GLFW_KEY_W && action == GLFW_RELEASE) {
+                direction = glm::vec3(0.f);
+            }
             if (key == GLFW_KEY_S && action == GLFW_PRESS) {
                 direction.x -= PLAYER_MOVE_SPEED;
+            }
+            else if (key == GLFW_KEY_S && action == GLFW_RELEASE) {
+                direction = glm::vec3(0.f);
             }
             if (key == GLFW_KEY_A && action == GLFW_PRESS) {
                 direction.z -= PLAYER_MOVE_SPEED;
             }
+            else if (key == GLFW_KEY_A && action == GLFW_RELEASE) {
+                direction = glm::vec3(0.f);
+            }
             if (key == GLFW_KEY_D && action == GLFW_PRESS) {
                 direction.z += PLAYER_MOVE_SPEED;
+            }
+            else if (key == GLFW_KEY_D && action == GLFW_RELEASE) {
+                direction = glm::vec3(0.f);
             }
         }
         break;
@@ -535,7 +547,7 @@ void Update() {
     physics::iRigidBody* rigidBody = dynamic_cast<physics::iRigidBody*>(player_mesh->collisionBody);
 
     if (rigidBody != nullptr) {
-        float force = 0.03f;
+        float force = 0.1f;
         float damping = 0.9f;
         
         rigidBody->ApplyTorque((direction * force) * damping);
