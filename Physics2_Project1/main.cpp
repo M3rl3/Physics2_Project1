@@ -73,6 +73,7 @@ void CreateMoon();
 void CreateSkyBoxSphere();
 void LoadTextures();
 void CreateBall(std::string modelName, glm::vec3 position, glm::vec4 color, float mass);
+void CreateWall(std::string modelName, glm::vec3 position, glm::vec3 rotation, float mass);
 
 enum eEditMode
 {
@@ -486,10 +487,15 @@ void Render() {
 
     CreateMoon();
 
-    CreateBall("ball0", glm::vec3(20, 5, 0), glm::vec4(100, 0, 0, 1), 2.f);
-    CreateBall("ball1", glm::vec3(0, 5, 20), glm::vec4(0, 100, 0, 1), 1.f);
-    CreateBall("ball2", glm::vec3(0, 5, -20), glm::vec4(0, 0, 100, 1), 1.25f);
-    CreateBall("ball3", glm::vec3(-20, 5, 0), glm::vec4(100, 100, 0, 1), 1.5f);
+    CreateBall("ball0", glm::vec3(20, 2, 0), glm::vec4(100, 0, 0, 1), 2.f);
+    CreateBall("ball1", glm::vec3(0, 2, 20), glm::vec4(0, 100, 0, 1), 1.f);
+    CreateBall("ball2", glm::vec3(0, 2, -20), glm::vec4(0, 0, 100, 1), 1.25f);
+    CreateBall("ball3", glm::vec3(-20, 2, 0), glm::vec4(100, 100, 0, 1), 1.5f);
+
+    CreateWall("wall0", glm::vec3(100, 0, 0), glm::vec3(0.f, 67.55f, 0.f), 1.f);
+    CreateWall("wall1", glm::vec3(-100, 0, 0), glm::vec3(0.f, -67.55f, 0.f), 1.f);
+    CreateWall("wall2", glm::vec3(0, 0, 100), glm::vec3(0.f), 1.f);
+    CreateWall("wall3", glm::vec3(0, 0, -100), glm::vec3(0.f, 135.1f, 0.f), 1.f);
     
     CreateSkyBoxSphere();
 
@@ -1010,7 +1016,7 @@ void CreatePlayerBall() {
     player_mesh->friendlyName = "player";
 
     float size = 1.f;
-    player_mesh->position = glm::vec3(0, 5, 0);
+    player_mesh->position = glm::vec3(0, 2, 0);
     player_mesh->SetUniformScale(size);
 
     player_mesh->hasTexture = true;
@@ -1057,6 +1063,33 @@ void CreateBall(std::string modelName, glm::vec3 position, glm::vec4 color, floa
 
     meshArray.push_back(ball);
 }
+
+void CreateWall(std::string modelName, glm::vec3 position, glm::vec3 rotation, float mass) {
+
+    cMeshInfo* wall = new cMeshInfo();
+    wall->meshName = "flat_plain";
+    wall->friendlyName = modelName;
+
+    wall->position = position;
+    wall->AdjustRoationAngleFromEuler(rotation);
+    wall->scale = glm::vec3(1.f, 0.1f, 1.f);
+    wall->RGBAColour = glm::vec4(100.f, 100.f, 100.f, 1.f);
+    wall->useRGBAColour = true;
+
+    physics::iShape* planeShape = new physics::PlaneShape(0.0f, glm::vec3(0.f, 1.f, 0.f));
+    physics::RigidBodyDesc description;
+    description.isStatic = true;
+    description.mass = mass;
+    description.position = position;
+    description.rotation = wall->rotation;
+    description.linearVelocity = glm::vec3(0.f);
+
+    wall->collisionBody = physicsFactory->CreateRigidBody(description, planeShape);
+    physicsWorld->AddBody(wall->collisionBody);
+
+    meshArray.push_back(wall);
+}
+
 
 void CreateMoon() {
 
