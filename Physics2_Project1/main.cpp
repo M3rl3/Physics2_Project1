@@ -9,8 +9,14 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+
+#include <iPhysicsFactory.h>
 #include <PhysicsFactory.h>
-#include <PhysicsWorld.h>
+
+#include <iPhysicsWorld.h>
+#include <iShape.h>
+#include <SphereShape.h>
+#include <PlaneShape.h>
 
 #include "cShaderManager/cShaderManager.h"
 #include "cVAOManager/cVAOManager.h"
@@ -278,25 +284,25 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
             //    player_mesh->KillAllForces();
             //}
             if (key == GLFW_KEY_W && action == GLFW_PRESS) {
-                direction.x += PLAYER_MOVE_SPEED;
+                direction.z += PLAYER_MOVE_SPEED;
             }
             else if (key == GLFW_KEY_W && action == GLFW_RELEASE) {
                 direction = glm::vec3(0.f);
             }
             if (key == GLFW_KEY_S && action == GLFW_PRESS) {
-                direction.x -= PLAYER_MOVE_SPEED;
+                direction.z -= PLAYER_MOVE_SPEED;
             }
             else if (key == GLFW_KEY_S && action == GLFW_RELEASE) {
                 direction = glm::vec3(0.f);
             }
             if (key == GLFW_KEY_A && action == GLFW_PRESS) {
-                direction.z -= PLAYER_MOVE_SPEED;
+                direction.x += PLAYER_MOVE_SPEED;
             }
             else if (key == GLFW_KEY_A && action == GLFW_RELEASE) {
                 direction = glm::vec3(0.f);
             }
             if (key == GLFW_KEY_D && action == GLFW_PRESS) {
-                direction.z += PLAYER_MOVE_SPEED;
+                direction.x -= PLAYER_MOVE_SPEED;
             }
             else if (key == GLFW_KEY_D && action == GLFW_RELEASE) {
                 direction = glm::vec3(0.f);
@@ -414,8 +420,8 @@ void Initialize() {
     // Init imgui for crosshair
     // crosshair.Initialize(window, glsl_version);
 
-    //physicsWorld = new physics::PhysicsWorld();
-    
+  
+    // Had to use the class type here
     // Init physics factory
     physicsFactory = new physics::PhysicsFactory();
 
@@ -423,7 +429,7 @@ void Initialize() {
     physicsWorld = physicsFactory->CreateWorld();
 
     // Set Gravity
-    //physicsWorld->SetGravity(glm::vec3(0.f, -9.8f, 0.f));
+    physicsWorld->SetGravity(glm::vec3(0.f, 0.f, 0.f));
 
     x = 0.1f; y = 0.5f; z = 19.f;
 }
@@ -482,7 +488,7 @@ void Render() {
 
     CreateBall("ball0", glm::vec3(20, 5, 0), glm::vec4(100, 0, 0, 1), 2.f);
     CreateBall("ball1", glm::vec3(0, 5, 20), glm::vec4(0, 100, 0, 1), 1.f);
-    CreateBall("ball2", glm::vec3(0, 5, -20), glm::vec4(0, 0, 100, 1), 1.f);
+    CreateBall("ball2", glm::vec3(0, 5, -20), glm::vec4(0, 0, 100, 1), 1.25f);
     CreateBall("ball3", glm::vec3(-20, 5, 0), glm::vec4(100, 100, 0, 1), 1.5f);
     
     CreateSkyBoxSphere();
@@ -537,13 +543,13 @@ void Update() {
     glUniform4f(eyeLocationLocation, cameraEye.x, cameraEye.y, cameraEye.z, 1.f);
 
     if (theEditMode == TAKE_CONTROL) {
-        cameraEye = player_mesh->position - glm::vec3(35.f, -4.f, 0.f);
+        cameraEye = player_mesh->position - glm::vec3(0.f, -4.f, 35.f);
         if (!enableMouse) {
             cameraTarget = player_mesh->position;
         }
     }
 
-    bulb_mesh->position = player_mesh->position - glm::vec3(75.f, -25.f, 0.f);
+    bulb_mesh->position = player_mesh->position - glm::vec3(0.f, -25.f, 75.f);
 
     if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
         mouseClick = true;
@@ -553,7 +559,7 @@ void Update() {
     physics::iRigidBody* rigidBody = dynamic_cast<physics::iRigidBody*>(player_mesh->collisionBody);
 
     if (rigidBody != nullptr) {
-        float force = 0.1f;
+        float force = 0.15f;
         float damping = 0.9f;
         
         rigidBody->ApplyTorque((direction * force) * damping);
@@ -968,7 +974,7 @@ void CreateFlatPlane() {
     plain_mesh->position = glm::vec3(0.f);
     plain_mesh->scale = glm::vec3(size);
     //plain_mesh->rotation = glm::angleAxis(glm::radians(-90.f), glm::vec3(1, 0, 0));
-    plain_mesh->AdjustRoationAngleFromEuler(glm::vec3(0.f));
+    plain_mesh->AdjustRoationAngleFromEuler(glm::vec3(67.55f, 0.f, 0.f));
 
     plain_mesh->useRGBAColour = true;
     plain_mesh->RGBAColour = glm::vec4(25.f, 25.f, 25.f, 1.f);
@@ -983,6 +989,7 @@ void CreateFlatPlane() {
     description.isStatic = true;
     description.mass = 0.f;
     description.position = plain_mesh->position;
+    description.rotation = plain_mesh->rotation;
     description.linearVelocity = glm::vec3(0.f);
 
     plain_mesh->collisionBody = physicsFactory->CreateRigidBody(description, planeShape);
