@@ -402,11 +402,14 @@ void Initialize() {
     // crosshair.Initialize(window, glsl_version);
 
     //physicsWorld = new physics::PhysicsWorld();
-
+    
+    // Init physics factory
     physicsFactory = new physics::PhysicsFactory();
 
+    // Init physics world
     physicsWorld = physicsFactory->CreateWorld();
 
+    // Set Gravity
     //physicsWorld->SetGravity(glm::vec3(0.f, -9.8f, 0.f));
 
     x = 0.1f; y = 0.5f; z = 19.f;
@@ -532,11 +535,14 @@ void Update() {
     physics::iRigidBody* rigidBody = dynamic_cast<physics::iRigidBody*>(player_mesh->collisionBody);
 
     if (rigidBody != nullptr) {
-        float force = 0.005f;
+        float force = 0.03f;
+        float damping = 0.9f;
         
-        rigidBody->ApplyTorque(direction * force);
-        rigidBody->ApplyForce(direction * force);
+        rigidBody->ApplyTorque((direction * force) * damping);
+        rigidBody->ApplyForce((direction * force) * damping);
+        //rigidBody->ApplyImpulse((direction * force) * damping);
         rigidBody->ApplyForceAtPoint(direction * force, glm::vec3(0.f, 5.f, 0.f));
+        //rigidBody->ApplyImpulseAtPoint(direction * force, glm::vec3(0.f, 5.f, 0.f));
 
         rigidBody->GetPosition(player_mesh->position);
         rigidBody->GetRotation(player_mesh->rotation);
@@ -653,8 +659,7 @@ void Update() {
         {
             glUniform1f(bHasTextureLocation, (GLfloat)GL_TRUE);
 
-            std::string texture0 = currentMesh->textures[0];    // moon
-            //std::string texture1 = currentMesh->textures[1];    // dungeon
+            std::string texture0 = currentMesh->textures[0];
  
             GLuint texture0ID = TextureMan->getTextureIDFromName(texture0);
 
@@ -706,6 +711,7 @@ void Update() {
         // adds the model's velocity to its current position
         //currentMesh->TranslateOverTime(0.5f);
         
+        // Physics update step
         physicsWorld->TimeStep(0.06f);
 
         glm::vec3 cursorPos;
@@ -985,7 +991,7 @@ void CreatePlayerBall() {
     player_mesh->hasTexture = true;
     player_mesh->RGBAColour = glm::vec4(100.f, 1.f, 1.f, 1.f);
     player_mesh->useRGBAColour = false;
-    player_mesh->drawBBox = true;
+    player_mesh->drawBBox = false;
     player_mesh->textures[0] = "basketball_sph.bmp";
     player_mesh->textureRatios[0] = 1.f;
     player_mesh->CopyVertices(player_obj);

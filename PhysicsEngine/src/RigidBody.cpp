@@ -48,9 +48,12 @@ namespace physics {
 		this->renderPosition = position;
 	}
 
+	// Subject to change
 	void RigidBody::Update(float v) {
 		if (renderPosition != nullptr) {
 			renderPosition->x += v;
+			renderPosition->y += v;
+			renderPosition->z += v;
 		}
 	}
 
