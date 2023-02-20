@@ -9,6 +9,7 @@ namespace physics {
 		collisionHandler(nullptr)
 	{
 		collisionHandler = new CollisionHandler();
+		collisionListener = new CollisionListener();
 	}
 
 	PhysicsWorld::PhysicsWorld(const PhysicsWorld&) {
@@ -30,6 +31,18 @@ namespace physics {
 		for (int i = 0; i < rigidBodies.size(); i++) {
 			delete rigidBodies[i];
 		}
+	}
+
+	CollisionListener::CollisionListener() {
+
+	}
+
+	CollisionListener::~CollisionListener() {
+
+	}
+
+	void CollisionListener::NotifyCollision(iCollisionBody* bodyA, iCollisionBody* bodyB) {
+		std::cout << "Collision!" << std::endl;
 	}
 
 	void PhysicsWorld::SetGravity(const glm::vec3& gravity)
@@ -147,6 +160,5 @@ namespace physics {
 			rigidBodies[i]->KillForces();
 		}
 	}
-
 }
 

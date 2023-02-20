@@ -8,6 +8,15 @@
 #include <vector>
 
 namespace physics {
+
+	class CollisionListener : public iCollisionListener {
+	public:
+		CollisionListener();
+		virtual ~CollisionListener();
+
+		virtual void NotifyCollision(iCollisionBody* bodyA, iCollisionBody* bodyB) override;
+	};
+
 	class PhysicsWorld : public iPhysicsWorld {
 	public:
 		PhysicsWorld();

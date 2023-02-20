@@ -66,6 +66,7 @@ void CreatePlayerBall();
 void CreateMoon();
 void CreateSkyBoxSphere();
 void LoadTextures();
+void CreateBall(std::string modelName, glm::vec3 position, glm::vec4 color, float mass);
 
 enum eEditMode
 {
@@ -478,6 +479,11 @@ void Render() {
     CreatePlayerBall();
 
     CreateMoon();
+
+    CreateBall("ball0", glm::vec3(20, 5, 0), glm::vec4(100, 0, 0, 1), 2.f);
+    CreateBall("ball1", glm::vec3(0, 5, 20), glm::vec4(0, 100, 0, 1), 1.f);
+    CreateBall("ball2", glm::vec3(0, 5, -20), glm::vec4(0, 0, 100, 1), 1.f);
+    CreateBall("ball3", glm::vec3(-20, 5, 0), glm::vec4(100, 100, 0, 1), 1.5f);
     
     CreateSkyBoxSphere();
 
@@ -998,7 +1004,7 @@ void CreatePlayerBall() {
 
     float size = 1.f;
     player_mesh->position = glm::vec3(0, 5, 0);
-    player_mesh->scale = glm::vec3(size);
+    player_mesh->SetUniformScale(size);
 
     player_mesh->hasTexture = true;
     player_mesh->RGBAColour = glm::vec4(100.f, 1.f, 1.f, 1.f);
@@ -1019,6 +1025,30 @@ void CreatePlayerBall() {
     physicsWorld->AddBody(player_mesh->collisionBody);
 
     meshArray.push_back(player_mesh);
+}
+
+void CreateBall(std::string modelName, glm::vec3 position, glm::vec4 color, float mass) {
+
+    cMeshInfo* ball = new cMeshInfo();
+    ball->meshName = "player";
+    ball->friendlyName = modelName;
+
+    ball->position = position;
+    ball->SetUniformScale(mass);
+    ball->RGBAColour = color;
+    ball->useRGBAColour = true;
+    
+    physics::iShape* ballShape = new physics::SphereShape(1.0f);
+    physics::RigidBodyDesc description;
+    description.isStatic = false;
+    description.mass = mass * 0.5f;
+    description.position = position;
+    description.linearVelocity = glm::vec3(0.f);
+
+    ball->collisionBody = physicsFactory->CreateRigidBody(description, ballShape);
+    physicsWorld->AddBody(ball->collisionBody);
+
+    meshArray.push_back(ball);
 }
 
 void CreateMoon() {
