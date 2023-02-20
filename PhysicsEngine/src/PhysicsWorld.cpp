@@ -97,6 +97,55 @@ namespace physics {
 
 	void PhysicsWorld::TimeStep(float dt) {
 
+		int bodyCount = collisionBodies.size();
+		int rigidBodyCount = rigidBodies.size();
+
+		for (int i = 0; i < rigidBodyCount; i++) {
+			rigidBodies[i]->Update(dt);
+		}
+
+		// Velocity Verlet steps
+		// Step #0 Update everything
+		for (int i = 0; i < rigidBodyCount; i++) {
+			if (!rigidBodies[i]->IsStatic()) {
+				rigidBodies[i]->SetGravityAcceleration(gravity);
+				rigidBodies[i]->UpdateAcceleration();
+			}
+		}
+
+		// Step #3 : Verlet
+		// velocity += acceleration * (dt/2)
+		for (int i = 0; i < rigidBodyCount; i++) {
+			if (!rigidBodies[i]->IsStatic()) {
+				rigidBodies[i]->VerletStep3(dt);
+				rigidBodies[i]->ApplyDamping(dt / 2.f);
+			}
+		}
+
+		// Step #1 : Verlet
+		// position += ( velocity+acceleration * (dt/2) ) * dt
+		for (int i = 0; i < rigidBodyCount; i++) {
+			if (!rigidBodies[i]->IsStatic()) {
+				rigidBodies[i]->VerletStep1(dt);
+			}
+		}
+
+		// Collisions
+		std::vector<CollidingBodies> collisions;
+		collisionHandler->Collide(dt, collisionBodies, collisions);
+
+		// List of collisions
+		for (int i = 0; i < collisions.size(); i++) {
+			collisionListener->NotifyCollision(collisions[i].bodyA, collisions[i].bodyB);
+		}
+
+		// Step #2 : Verlet
+		// velocity += acceleration * (dt/2)
+		for (int i = 0; i < rigidBodyCount; i++) {
+			rigidBodies[i]->VerletStep2(dt);
+			rigidBodies[i]->ApplyDamping(dt / 2.f);
+			rigidBodies[i]->KillForces();
+		}
 	}
 
 }

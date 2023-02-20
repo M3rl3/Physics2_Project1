@@ -9,6 +9,9 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <PhysicsFactory.h>
+#include <PhysicsWorld.h>
+
 #include "cShaderManager/cShaderManager.h"
 #include "cVAOManager/cVAOManager.h"
 #include "cBasicTextureManager/cBasicTextureManager.h"
@@ -27,6 +30,10 @@ GLuint shaderID = 0;
 
 cVAOManager* VAOMan;
 cBasicTextureManager* TextureMan;
+PlyFileLoader* modelLoader;
+
+physics::iPhysicsWorld* physicsWorld;
+physics::iPhysicsFactory* physicsFactory;
 
 sModelDrawInfo player_obj;
 
@@ -53,6 +60,13 @@ void ManageLights();
 float RandomFloat(float a, float b);
 bool RandomizePositions(cMeshInfo* mesh);
 
+void CreateLightBulb();
+void CreateFlatPlane();
+void CreatePlayerBall();
+void CreateMoon();
+void CreateSkyBoxSphere();
+void LoadTextures();
+
 enum eEditMode
 {
     MOVING_CAMERA,
@@ -61,7 +75,7 @@ enum eEditMode
     TAKE_CONTROL
 };
 
-glm::vec3 cameraEye; //loaded from external file
+glm::vec3 cameraEye = glm::vec3(0, 15, -50);
 //glm::vec3 cameraTarget = glm::vec3(-75.0f, 2.0f, 0.0f);
 
 // controlled by mouse
@@ -72,6 +86,8 @@ glm::vec3 cameraDest = glm::vec3(0.f);
 glm::vec3 cameraVelocity = glm::vec3(0.f);
 
 glm::vec3 lastPos = glm::vec3(0.f);
+
+glm::vec3 direction(0.f);
 
 float yaw = 0.f;
 float pitch = 0.f;
@@ -109,7 +125,7 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
     {
         theEditMode = TAKE_CONTROL;
         cameraTarget = player_mesh->position;
-        cameraEye = player_mesh->position - glm::vec3(20.f, -4.f, 0.f);
+        cameraEye = player_mesh->position - glm::vec3(0.f, -4.f, 20.f);
     }
     // Wireframe
     if (key == GLFW_KEY_X && action == GLFW_PRESS) {
@@ -128,10 +144,6 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
     if (key == GLFW_KEY_LEFT_ALT && action == GLFW_RELEASE) {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     }
-    /* 
-    *    updates translation of all objects in the scene based on changes made to scene 
-    *    description files, resets everything if no changes were made
-    */
     if (key == GLFW_KEY_F1 && action == GLFW_PRESS) {
         enableMouse = !enableMouse;
     }
@@ -222,47 +234,59 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
         {
             constexpr float PLAYER_MOVE_SPEED = 1.f;
 
+            //if (key == GLFW_KEY_W && action == GLFW_PRESS) {
+            //    player_mesh->velocity.x = PLAYER_MOVE_SPEED;
+            //    player_mesh->rotation = glm::quat(glm::vec3(0.f, 67.55f, 0.f));
+            //}
+            //if (key == GLFW_KEY_W && action == GLFW_RELEASE) {
+            //    player_mesh->KillAllForces();
+            //}
+            //if (key == GLFW_KEY_S && action == GLFW_PRESS) {
+            //    player_mesh->velocity.x = -PLAYER_MOVE_SPEED;
+            //    player_mesh->rotation = glm::quat(glm::vec3(0.f, -67.55f, 0.f));
+            //}
+            //if (key == GLFW_KEY_S && action == GLFW_RELEASE) {
+            //    player_mesh->KillAllForces();
+            //}
+            //if (key == GLFW_KEY_A && action == GLFW_PRESS) {
+            //    player_mesh->velocity.z = -PLAYER_MOVE_SPEED;
+            //    player_mesh->rotation = glm::quat(glm::vec3(0.f, 0.f, 0.f));
+            //}
+            //if (key == GLFW_KEY_A && action == GLFW_RELEASE) {
+            //    player_mesh->KillAllForces();
+            //}
+            //if (key == GLFW_KEY_D && action == GLFW_PRESS) {
+            //    player_mesh->velocity.z = PLAYER_MOVE_SPEED;
+            //    player_mesh->rotation = glm::quat(glm::vec3(0.f, 135.10f, 0.f));
+            //}
+            //if (key == GLFW_KEY_D && action == GLFW_RELEASE) {
+            //    player_mesh->KillAllForces();
+            //}
+            //if (key == GLFW_KEY_Q && action == GLFW_PRESS) {
+            //    player_mesh->velocity.y = PLAYER_MOVE_SPEED;
+            //    //player_mesh->rotation = glm::quat(glm::vec3(0.f, 1.f, 0.f));
+            //}
+            //if (key == GLFW_KEY_Q && action == GLFW_RELEASE) {
+            //    player_mesh->KillAllForces();
+            //}
+            //if (key == GLFW_KEY_E && action == GLFW_PRESS) {
+            //    player_mesh->velocity.y = -PLAYER_MOVE_SPEED;
+            //    //player_mesh->rotation = glm::quat(glm::vec3(0.f, -1.f, 0.f));
+            //}
+            //if (key == GLFW_KEY_E && action == GLFW_RELEASE) {
+            //    player_mesh->KillAllForces();
+            //}
             if (key == GLFW_KEY_W && action == GLFW_PRESS) {
-                player_mesh->velocity.x = PLAYER_MOVE_SPEED;
-                player_mesh->rotation = glm::quat(glm::vec3(0.f, 67.55f, 0.f));
-            }
-            if (key == GLFW_KEY_W && action == GLFW_RELEASE) {
-                player_mesh->KillAllForces();
+                direction.x += PLAYER_MOVE_SPEED;
             }
             if (key == GLFW_KEY_S && action == GLFW_PRESS) {
-                player_mesh->velocity.x = -PLAYER_MOVE_SPEED;
-                player_mesh->rotation = glm::quat(glm::vec3(0.f, -67.55f, 0.f));
-            }
-            if (key == GLFW_KEY_S && action == GLFW_RELEASE) {
-                player_mesh->KillAllForces();
+                direction.x -= PLAYER_MOVE_SPEED;
             }
             if (key == GLFW_KEY_A && action == GLFW_PRESS) {
-                player_mesh->velocity.z = -PLAYER_MOVE_SPEED;
-                player_mesh->rotation = glm::quat(glm::vec3(0.f, 0.f, 0.f));
-            }
-            if (key == GLFW_KEY_A && action == GLFW_RELEASE) {
-                player_mesh->KillAllForces();
+                direction.z -= PLAYER_MOVE_SPEED;
             }
             if (key == GLFW_KEY_D && action == GLFW_PRESS) {
-                player_mesh->velocity.z = PLAYER_MOVE_SPEED;
-                player_mesh->rotation = glm::quat(glm::vec3(0.f, 135.10f, 0.f));
-            }
-            if (key == GLFW_KEY_D && action == GLFW_RELEASE) {
-                player_mesh->KillAllForces();
-            }
-            if (key == GLFW_KEY_Q && action == GLFW_PRESS) {
-                player_mesh->velocity.y = PLAYER_MOVE_SPEED;
-                //player_mesh->rotation = glm::quat(glm::vec3(0.f, 1.f, 0.f));
-            }
-            if (key == GLFW_KEY_Q && action == GLFW_RELEASE) {
-                player_mesh->KillAllForces();
-            }
-            if (key == GLFW_KEY_E && action == GLFW_PRESS) {
-                player_mesh->velocity.y = -PLAYER_MOVE_SPEED;
-                //player_mesh->rotation = glm::quat(glm::vec3(0.f, -1.f, 0.f));
-            }
-            if (key == GLFW_KEY_E && action == GLFW_RELEASE) {
-                player_mesh->KillAllForces();
+                direction.z += PLAYER_MOVE_SPEED;
             }
         }
         break;
@@ -377,6 +401,14 @@ void Initialize() {
     // Init imgui for crosshair
     // crosshair.Initialize(window, glsl_version);
 
+    //physicsWorld = new physics::PhysicsWorld();
+
+    physicsFactory = new physics::PhysicsFactory();
+
+    physicsWorld = physicsFactory->CreateWorld();
+
+    //physicsWorld->SetGravity(glm::vec3(0.f, -9.8f, 0.f));
+
     x = 0.1f; y = 0.5f; z = 19.f;
 }
 
@@ -415,165 +447,32 @@ void Render() {
     // Load asset paths from external file
     ReadFromFile();
 
+    // Model Loader
+    modelLoader = new PlyFileLoader();
+
     // VAO Manager
     VAOMan = new cVAOManager();
     
     // Scene
     std::cout << "\nLoading assets..." << std::endl;
 
-    sModelDrawInfo bulb;
-    LoadModel(meshFiles[0], bulb);
-    if (!VAOMan->LoadModelIntoVAO("bulb", bulb, shaderID)) {
-        std::cerr << "Could not load model into VAO" << std::endl;
-    }
-    bulb_mesh = new cMeshInfo();
-    bulb_mesh->meshName = "bulb";
-    bulb_mesh->friendlyName = "bulb";
-    bulb_mesh->isWireframe = wireFrame;
-    meshArray.push_back(bulb_mesh);
+    CreateLightBulb();
+
+    CreateFlatPlane();
+
+    CreatePlayerBall();
+
+    CreateMoon();
     
-    sModelDrawInfo terrain_obj;
-    LoadModel(meshFiles[4], terrain_obj);
-    if (!VAOMan->LoadModelIntoVAO("terrain", terrain_obj, shaderID)) {
-        std::cerr << "Could not load model into VAO" << std::endl;
-    }
-    cMeshInfo* terrain_mesh = new cMeshInfo();
-    terrain_mesh->meshName = "terrain";
-    terrain_mesh->isWireframe = wireFrame;
-    terrain_mesh->RGBAColour = glm::vec4(25.f, 25.f, 25.f, 1.f);
-    terrain_mesh->doNotLight = false;
-    terrain_mesh->useRGBAColour = true;
-    terrain_mesh->isTerrainMesh = false;
-    terrain_mesh->isVisible = false;
-    meshArray.push_back(terrain_mesh);
+    CreateSkyBoxSphere();
 
-    sModelDrawInfo flat_plain_obj;
-    LoadModel(meshFiles[3], flat_plain_obj);
-    if (!VAOMan->LoadModelIntoVAO("flat_plain", flat_plain_obj, shaderID)) {
-        std::cerr << "Could not load model into VAO" << std::endl;
-    }
-    cMeshInfo* flat_plain = new cMeshInfo();
-    flat_plain->meshName = "flat_plain";
-    flat_plain->friendlyName = "flat_beholder";
-    flat_plain->RGBAColour = glm::vec4(20.5f, 20.5f, 20.5f, 1.f);
-    flat_plain->useRGBAColour = true;
-    meshArray.push_back(flat_plain);
-
-    LoadModel(meshFiles[7], player_obj);
-    if (!VAOMan->LoadModelIntoVAO("player", player_obj, shaderID)) {
-        std::cerr << "Could not load model into VAO" << std::endl;
-    }
-    player_mesh = new cMeshInfo();
-    player_mesh->meshName = "player";
-    player_mesh->friendlyName = "player";
-    player_mesh->hasTexture = true;
-    player_mesh->RGBAColour = glm::vec4(100.f, 1.f, 1.f, 1.f);
-    player_mesh->useRGBAColour = false;
-    player_mesh->drawBBox = true;
-    player_mesh->textures[0] = "basketball_sph.bmp";
-    player_mesh->textureRatios[0] = 1.f;
-    player_mesh->CopyVertices(player_obj);
-    meshArray.push_back(player_mesh);
-
-    sModelDrawInfo moon_obj;
-    LoadModel(meshFiles[5], moon_obj);
-    if (!VAOMan->LoadModelIntoVAO("moon", moon_obj, shaderID)) {
-        std::cerr << "Could not load model into VAO" << std::endl;
-    }
-    cMeshInfo* moon_mesh = new cMeshInfo();
-    moon_mesh->meshName = "moon";
-    moon_mesh->friendlyName = "moon";
-    moon_mesh->isWireframe = wireFrame;
-    moon_mesh->useRGBAColour = false;
-    moon_mesh->RGBAColour = glm::vec4(100.f, 25.f, 25.f, 1.f);
-    moon_mesh->hasTexture = true;
-    moon_mesh->textures[0] = "moon_texture.bmp";
-    moon_mesh->textureRatios[0] = 1.0f;
-    meshArray.push_back(moon_mesh);
-
-    // skybox sphere with inverted normals
-    sModelDrawInfo skybox_sphere_obj;
-    LoadModel(meshFiles[6], skybox_sphere_obj);
-    if (!VAOMan->LoadModelIntoVAO("skybox_sphere", skybox_sphere_obj, shaderID)) {
-        std::cerr << "Could not load model into VAO" << std::endl;
-    }
-    skybox_sphere_mesh = new cMeshInfo();
-    skybox_sphere_mesh->meshName = "skybox_sphere";
-    skybox_sphere_mesh->friendlyName = "skybox_sphere";
-    skybox_sphere_mesh->isSkyBoxMesh = true;
-    meshArray.push_back(skybox_sphere_mesh);
-
-    // skybox/cubemap textures
-    std::cout << "\nLoading Textures...";
-
-    std::string errorString = "";
-    TextureMan = new cBasicTextureManager();
-
-    TextureMan->SetBasePath("../assets/textures");
-    
-    const char* skybox_name = "NightSky";
-    if (TextureMan->CreateCubeTextureFromBMPFiles("NightSky",
-                                                  "SpaceBox_right1_posX.bmp",
-                                                  "SpaceBox_left2_negX.bmp",
-                                                  "SpaceBox_top3_posY.bmp",
-                                                  "SpaceBox_bottom4_negY.bmp",
-                                                  "SpaceBox_front5_posZ.bmp",
-                                                  "SpaceBox_back6_negZ.bmp",
-                                                  true, errorString))
-    {
-        std::cout << "\nLoaded skybox textures: " << skybox_name << std::endl;
-    }
-    else 
-    {
-        std::cout << "\nError: failed to load skybox because " << errorString;
-    }
-
-    // Basic texture2D
-    if (TextureMan->Create2DTextureFromBMPFile("moon_texture.bmp"))
-    {
-        std::cout << "Loaded moon texture." << std::endl;
-    }
-    else 
-    {
-        std::cout << "Error: failed to load moon texture.";
-    }
-    
-    if (TextureMan->Create2DTextureFromBMPFile("man.bmp"))
-    {
-        std::cout << "Loaded player texture." << std::endl;
-    }
-    else 
-    {
-        std::cout << "Error: failed to load player texture.";
-    }
-    
-    if (TextureMan->Create2DTextureFromBMPFile("basketball_sph.bmp"))
-    {
-        std::cout << "Loaded football_texture.bmp texture." << std::endl;
-    }
-    else 
-    {
-        std::cout << "Error: failed to load computer texture.";
-    }
-    
-    if (TextureMan->Create2DTextureFromBMPFile("ai-notes.bmp"))
-    {
-        std::cout << "Loaded computer texture." << std::endl;
-    }
-    else
-    {
-        std::cout << "Error: failed to load computer texture.";
-    }
+    LoadTextures();
 
     // reads scene descripion files for positioning and other info
-    ReadSceneDescription();
+    //ReadSceneDescription();
 
-    player_mesh->SetUniformScale(2.5f);
-    {
-        flat_plain->rotation.x = 0.f;
-        flat_plain->rotation.y = 67.55f;
-        flat_plain->rotation.z = 0.f;
-    }
+    //player_mesh->SetUniformScale(2.5f);
+    
 }
 
 void Update() {
@@ -621,10 +520,6 @@ void Update() {
         if (!enableMouse) {
             cameraTarget = player_mesh->position;
         }
-        // last velocity when it wasnt 0
-        if (player_mesh->velocity != glm::vec3(0.f)) {
-            player_mesh->facingDirection = player_mesh->velocity;
-        }
     }
 
     bulb_mesh->position = player_mesh->position - glm::vec3(75.f, -25.f, 0.f);
@@ -634,9 +529,60 @@ void Update() {
     }
     else mouseClick = false;
 
+    physics::iRigidBody* rigidBody = dynamic_cast<physics::iRigidBody*>(player_mesh->collisionBody);
+
+    if (rigidBody != nullptr) {
+        float force = 0.005f;
+        
+        rigidBody->ApplyTorque(direction * force);
+        rigidBody->ApplyForce(direction * force);
+        rigidBody->ApplyForceAtPoint(direction * force, glm::vec3(0.f, 5.f, 0.f));
+
+        rigidBody->GetPosition(player_mesh->position);
+        rigidBody->GetRotation(player_mesh->rotation);
+    }
+
     for (int i = 0; i < meshArray.size(); i++) {
 
         cMeshInfo* currentMesh = meshArray[i];
+
+        if (currentMesh->collisionBody != nullptr) {
+
+            physics::iRigidBody* rigidBody = dynamic_cast<physics::iRigidBody*>(currentMesh->collisionBody);
+
+            glm::vec3 position;
+            //glm::quat rotation;
+
+            rigidBody->GetPosition(position);
+            rigidBody->GetRotation(currentMesh->rotation);
+            
+            //currentMesh->rotation = rotation;
+            currentMesh->position = position;
+
+            float bounds = 100.f;
+            float response = 2.f;
+
+            if (position.x < -bounds)
+            {
+                rigidBody->ApplyForce(glm::vec3(response, 0.f, 0.f));
+            }
+
+            if (position.x > bounds)
+            {
+                rigidBody->ApplyForce(glm::vec3(-response, 0.f, 0.f));
+            }
+
+            if (position.z < -bounds)
+            {
+                rigidBody->ApplyForce(glm::vec3(0.f, 0.f, response));
+            }
+
+            if (position.z > bounds)
+            {
+                rigidBody->ApplyForce(glm::vec3(0.f, 0.f, -response));
+            }
+        }
+
         model = glm::mat4x4(1.f);
 
         if (currentMesh->isVisible == false) {
@@ -758,8 +704,10 @@ void Update() {
         //}
 
         // adds the model's velocity to its current position
-        currentMesh->TranslateOverTime(0.5f);
+        //currentMesh->TranslateOverTime(0.5f);
         
+        physicsWorld->TimeStep(0.06f);
+
         glm::vec3 cursorPos;
 
         // Division is expensive
@@ -978,6 +926,137 @@ float RandomFloat(float a, float b) {
     return a + r;
 }
 
+void CreateFlatPlane() {
+
+    sModelDrawInfo flat_plain;
+    modelLoader->LoadModel(meshFiles[9], flat_plain);
+    if (!VAOMan->LoadModelIntoVAO("flat_plain", flat_plain, shaderID)) {
+        std::cerr << "Could not load model into VAO" << std::endl;
+    }
+
+    cMeshInfo* plain_mesh = new cMeshInfo();
+
+    float size = 1.f;
+
+    plain_mesh->meshName = "flat_plain";
+    plain_mesh->friendlyName = "flat_plain";
+
+    plain_mesh->position = glm::vec3(0.f);
+    plain_mesh->scale = glm::vec3(size);
+    //plain_mesh->rotation = glm::angleAxis(glm::radians(-90.f), glm::vec3(1, 0, 0));
+    plain_mesh->AdjustRoationAngleFromEuler(glm::vec3(0.f));
+
+    plain_mesh->useRGBAColour = true;
+    plain_mesh->RGBAColour = glm::vec4(25.f, 25.f, 25.f, 1.f);
+    plain_mesh->doNotLight = false;
+    plain_mesh->useRGBAColour = true;
+    plain_mesh->isTerrainMesh = false;
+    plain_mesh->hasTexture = false;
+    plain_mesh->isVisible = true;
+
+    physics::iShape* planeShape = new physics::PlaneShape(0.0f, glm::vec3(0.f, 1.f, 0.f));
+    physics::RigidBodyDesc description;
+    description.isStatic = true;
+    description.mass = 0.f;
+    description.position = plain_mesh->position;
+    description.linearVelocity = glm::vec3(0.f);
+
+    plain_mesh->collisionBody = physicsFactory->CreateRigidBody(description, planeShape);
+    physicsWorld->AddBody(plain_mesh->collisionBody);
+    
+    meshArray.push_back(plain_mesh);
+}
+
+void CreatePlayerBall() {
+
+    unsigned int playerModelID = modelLoader->LoadModel(meshFiles[7], player_obj);
+
+    if (!VAOMan->LoadModelIntoVAO("player", player_obj, shaderID)) {
+        std::cerr << "Could not load model into VAO" << std::endl;
+    }
+    player_mesh = new cMeshInfo();
+    player_mesh->meshName = "player";
+    player_mesh->friendlyName = "player";
+
+    float size = 1.f;
+    player_mesh->position = glm::vec3(0, 5, 0);
+    player_mesh->scale = glm::vec3(size);
+
+    player_mesh->hasTexture = true;
+    player_mesh->RGBAColour = glm::vec4(100.f, 1.f, 1.f, 1.f);
+    player_mesh->useRGBAColour = false;
+    player_mesh->drawBBox = true;
+    player_mesh->textures[0] = "basketball_sph.bmp";
+    player_mesh->textureRatios[0] = 1.f;
+    player_mesh->CopyVertices(player_obj);
+
+    physics::iShape* ballShape = new physics::SphereShape(1.0f);
+    physics::RigidBodyDesc description;
+    description.isStatic = false;
+    description.mass = size;
+    description.position = player_mesh->position;
+    description.linearVelocity = glm::vec3(0.f);
+    
+    player_mesh->collisionBody = physicsFactory->CreateRigidBody(description, ballShape);
+    physicsWorld->AddBody(player_mesh->collisionBody);
+
+    meshArray.push_back(player_mesh);
+}
+
+void CreateMoon() {
+
+    sModelDrawInfo moon_obj;
+    modelLoader->LoadModel(meshFiles[5], moon_obj);
+    if (!VAOMan->LoadModelIntoVAO("moon", moon_obj, shaderID)) {
+        std::cerr << "Could not load model into VAO" << std::endl;
+    }
+    cMeshInfo* moon_mesh = new cMeshInfo();
+    moon_mesh->meshName = "moon";
+    moon_mesh->friendlyName = "moon";
+
+    moon_mesh->position = glm::vec3(-180.f, 370.f, 400.f);
+    moon_mesh->AdjustRoationAngleFromEuler(glm::vec3(0.f));
+    moon_mesh->SetUniformScale(20.f);
+
+    moon_mesh->useRGBAColour = false;
+    moon_mesh->hasTexture = true;
+    moon_mesh->textures[0] = "moon_texture.bmp";
+    moon_mesh->textureRatios[0] = 1.0f;
+    meshArray.push_back(moon_mesh);
+}
+
+void CreateLightBulb() {
+
+    sModelDrawInfo bulb;
+    modelLoader->LoadModel(meshFiles[0], bulb);
+    if (!VAOMan->LoadModelIntoVAO("bulb", bulb, shaderID)) {
+        std::cerr << "Could not load model into VAO" << std::endl;
+    }
+    bulb_mesh = new cMeshInfo();
+    bulb_mesh->meshName = "bulb";
+    bulb_mesh->friendlyName = "bulb";
+    bulb_mesh->isWireframe = wireFrame;
+    bulb_mesh->position = glm::vec3(-220.f, 30.f, 0.f);
+    bulb_mesh->rotation = glm::angleAxis(glm::radians(-90.f), glm::vec3(1, 0, 0));
+    bulb_mesh->SetUniformScale(0.1f);
+    meshArray.push_back(bulb_mesh);
+}
+
+void CreateSkyBoxSphere() {
+
+    // skybox sphere with inverted normals
+    sModelDrawInfo skybox_sphere_obj;
+    modelLoader->LoadModel(meshFiles[6], skybox_sphere_obj);
+    if (!VAOMan->LoadModelIntoVAO("skybox_sphere", skybox_sphere_obj, shaderID)) {
+        std::cerr << "Could not load model into VAO" << std::endl;
+    }
+    skybox_sphere_mesh = new cMeshInfo();
+    skybox_sphere_mesh->meshName = "skybox_sphere";
+    skybox_sphere_mesh->friendlyName = "skybox_sphere";
+    skybox_sphere_mesh->isSkyBoxMesh = true;
+    meshArray.push_back(skybox_sphere_mesh);
+}
+
 bool RandomizePositions(cMeshInfo* mesh) {
 
     int i = 0;
@@ -990,6 +1069,71 @@ bool RandomizePositions(cMeshInfo* mesh) {
     mesh->position = glm::vec3(x, y, z);
     
     return true;
+}
+
+void LoadTextures() {
+
+    // skybox/cubemap textures
+    std::cout << "\nLoading Textures...";
+
+    std::string errorString = "";
+    TextureMan = new cBasicTextureManager();
+
+    TextureMan->SetBasePath("../assets/textures");
+
+    const char* skybox_name = "NightSky";
+    if (TextureMan->CreateCubeTextureFromBMPFiles("NightSky",
+        "SpaceBox_right1_posX.bmp",
+        "SpaceBox_left2_negX.bmp",
+        "SpaceBox_top3_posY.bmp",
+        "SpaceBox_bottom4_negY.bmp",
+        "SpaceBox_front5_posZ.bmp",
+        "SpaceBox_back6_negZ.bmp",
+        true, errorString))
+    {
+        std::cout << "\nLoaded skybox textures: " << skybox_name << std::endl;
+    }
+    else
+    {
+        std::cout << "\nError: failed to load skybox because " << errorString;
+    }
+
+    // Basic texture2D
+    if (TextureMan->Create2DTextureFromBMPFile("moon_texture.bmp"))
+    {
+        std::cout << "Loaded moon texture." << std::endl;
+    }
+    else
+    {
+        std::cout << "Error: failed to load moon texture.";
+    }
+
+    if (TextureMan->Create2DTextureFromBMPFile("man.bmp"))
+    {
+        std::cout << "Loaded player texture." << std::endl;
+    }
+    else
+    {
+        std::cout << "Error: failed to load player texture.";
+    }
+
+    if (TextureMan->Create2DTextureFromBMPFile("basketball_sph.bmp"))
+    {
+        std::cout << "Loaded football_texture.bmp texture." << std::endl;
+    }
+    else
+    {
+        std::cout << "Error: failed to load computer texture.";
+    }
+
+    if (TextureMan->Create2DTextureFromBMPFile("ai-notes.bmp"))
+    {
+        std::cout << "Loaded computer texture." << std::endl;
+    }
+    else
+    {
+        std::cout << "Error: failed to load computer texture.";
+    }
 }
 
 int main(int argc, char** argv) {

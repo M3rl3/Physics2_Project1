@@ -19,6 +19,7 @@ cMeshInfo::cMeshInfo() {
 	this->isSkyBoxMesh = false;
 	this->hasChildMeshes = false;
 	this->isAnimated = false;
+	this->collisionBody = nullptr;
 	this->radius = 7.f;
 	this->min = glm::vec3(FLT_MAX, FLT_MAX, FLT_MAX);
 	this->max = glm::vec3(FLT_MIN, FLT_MIN, FLT_MIN);
@@ -98,6 +99,7 @@ void cMeshInfo::CopyVertices(sModelDrawInfo model) {
 		if (vertices[i].z > this->max.z) this->max.z = vertices[i].z;
 	}
 	this->vertices = vertices;
+	this->nVertices = numVertices;
 }
 
 void cMeshInfo::CopyIndices(sModelDrawInfo model) {
@@ -109,7 +111,8 @@ void cMeshInfo::CopyIndices(sModelDrawInfo model) {
 	}
 
 	unsigned int numTriangles = model.numberOfTriangles;
-	std::vector <glm::vec3> tempIndices(numTriangles);
+
+	/*std::vector <glm::vec3> tempIndices(numTriangles);
 
 	unsigned int index = 0;
 	for (int i = 0; i < numTriangles; i++) {
@@ -117,7 +120,9 @@ void cMeshInfo::CopyIndices(sModelDrawInfo model) {
 		tempIndices[i].y = indices[index + 1];
 		tempIndices[i].z = indices[index + 2];
 		index += 3;
-	}
+	}*/
 	
-	this->indices = tempIndices;
+	this->indices = indices;
+	this->nIndices = numIndices;
+	this->nTriangles = numTriangles;
 }

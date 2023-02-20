@@ -7,3 +7,4 @@
 ../assets/meshes/skybox_sphere.ply
 ../assets/meshes/sphere.ply
 ../assets/meshes/steve.ply
+../assets/meshes/plane_reoriented.ply

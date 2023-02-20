@@ -1,28 +1,27 @@
 #include "LoadModel.h"
 
-void LoadModel(std::string fileName, sModelDrawInfo& plyModel) {
+PlyFileLoader::PlyFileLoader() {
 
-    struct vertexLayout {
+}
 
-        float x, y, z;
-        float nx, ny, nz;
-        float r, g, b, a;
-        float texture_u, texture_v;
-    };
+PlyFileLoader::~PlyFileLoader() {
 
-    struct triangleLayout {
+}
 
-        unsigned int triangleIndices[3];
-    };
+sModelDrawInfo* PlyFileLoader::GetPlyModelByID(unsigned int id) {
+
+    return plyModels[id];
+}
+
+int PlyFileLoader::LoadModel(std::string fileName, sModelDrawInfo& plyModel) {
 
     vertexLayout* modelArray = NULL;
     triangleLayout* triangleArray = NULL;
 
-
     std::ifstream plyFile(fileName);
     if (!plyFile.is_open()) {
         std::cout << "Could not load file." << std::endl;
-        return;
+        return -1;
     }
 
     std::string input1;
@@ -131,8 +130,13 @@ void LoadModel(std::string fileName, sModelDrawInfo& plyModel) {
         indexIndices += 3;
     }
 
-    
+    if (&plyModel != nullptr) {
 
+        plyModels.push_back(&plyModel);
+    }
+    
     delete[] modelArray;
     delete[] triangleArray;
+
+    return plyModels.size() - 1;
 }

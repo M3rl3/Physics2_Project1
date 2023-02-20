@@ -10,6 +10,9 @@
 #include "Animation.h"
 #include "cVAOManager/cVAOManager.h"
 
+#include <../interfaces/iCollisionBody.h>
+#include <../interfaces/iRigidBody.h>
+
 class cMeshInfo {
 
 public:
@@ -58,6 +61,8 @@ public:
 	Particle* particle;
 	Animation animation;
 
+	physics::iCollisionBody* collisionBody;
+
 	EasingType currentEasing;
 	EasingType currentEasing1;
 	EasingType currentEasing2;
@@ -65,7 +70,7 @@ public:
 	std::string message;
 
 	std::vector <glm::vec3> vertices;
-	std::vector <glm::vec3> indices;
+	std::vector <unsigned int> indices;
 
 	glm::vec3 min;
 	glm::vec3 max;
