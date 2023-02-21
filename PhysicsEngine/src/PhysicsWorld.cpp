@@ -146,6 +146,7 @@ namespace physics {
 		// Collisions
 		std::vector<CollidingBodies> collisions;
 		collisionHandler->Collide(dt, collisionBodies, collisions);
+		//collisionHandler->CollideRigidRigid((collisionBodies.size() - 1), )
 
 		// List of collisions
 		for (int i = 0; i < collisions.size(); i++) {

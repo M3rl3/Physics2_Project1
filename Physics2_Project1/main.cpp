@@ -73,7 +73,7 @@ void CreateMoon();
 void CreateSkyBoxSphere();
 void LoadTextures();
 void CreateBall(std::string modelName, glm::vec3 position, glm::vec4 color, float mass);
-void CreateWall(std::string modelName, glm::vec3 position, glm::vec3 rotation, float mass);
+void CreateWall(std::string modelName, glm::vec3 position, glm::vec3 rotation, glm::vec3 normal, float mass);
 
 enum eEditMode
 {
@@ -116,36 +116,53 @@ static void ErrorCallback(int error, const char* description)
     fprintf(stderr, "Error: %s\n", description);
 }
 
-static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
-{
+// All user inputs handled here
+static void KeyboardCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
+    
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, GLFW_TRUE);
     }
-    if (key == GLFW_KEY_C && action == GLFW_PRESS)
-    {
-        theEditMode = MOVING_CAMERA;
+    
+    constexpr float MOVE_SPEED = 1.f;
+
+    if (key == GLFW_KEY_W && action == GLFW_PRESS) {
+        direction.z += MOVE_SPEED;
     }
-    if (key == GLFW_KEY_O && action == GLFW_PRESS)
-    {
-        theEditMode = MOVING_SELECTED_OBJECT;
+    else if (key == GLFW_KEY_W && action == GLFW_RELEASE) {
+        direction = glm::vec3(0.f);
     }
-    if (key == GLFW_KEY_F && action == GLFW_PRESS)
-    {
-        theEditMode = TAKE_CONTROL;
-        cameraTarget = player_mesh->position;
-        cameraEye = player_mesh->position - glm::vec3(0.f, -4.f, 20.f);
+    if (key == GLFW_KEY_S && action == GLFW_PRESS) {
+        direction.z -= MOVE_SPEED;
     }
-    // Wireframe
-    if (key == GLFW_KEY_X && action == GLFW_PRESS) {
-        for (int i = 0; i < meshArray.size(); i++) {
-            meshArray[i]->isWireframe = true;
-        }
+    else if (key == GLFW_KEY_S && action == GLFW_RELEASE) {
+        direction = glm::vec3(0.f);
     }
-    if (key == GLFW_KEY_X && action == GLFW_RELEASE) {
-        for (int i = 0; i < meshArray.size(); i++) {
-            meshArray[i]->isWireframe = false;
-        }
+    if (key == GLFW_KEY_A && action == GLFW_PRESS) {
+        direction.x += MOVE_SPEED;
     }
+    else if (key == GLFW_KEY_A && action == GLFW_RELEASE) {
+        direction = glm::vec3(0.f);
+    }
+    if (key == GLFW_KEY_D && action == GLFW_PRESS) {
+        direction.x -= MOVE_SPEED;
+    }
+    else if (key == GLFW_KEY_D && action == GLFW_RELEASE) {
+        direction = glm::vec3(0.f);
+    }
+
+    if (key == GLFW_KEY_UP) {
+        cameraEye.z += MOVE_SPEED;
+    }
+    if (key == GLFW_KEY_DOWN) {
+        cameraEye.z -= MOVE_SPEED;
+    }
+    if (key == GLFW_KEY_LEFT) {
+        cameraEye.x -= MOVE_SPEED;
+    }
+    if (key == GLFW_KEY_RIGHT) {
+        cameraEye.x += MOVE_SPEED;
+    }
+
     if (key == GLFW_KEY_LEFT_ALT && action == GLFW_PRESS) {
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
     }
@@ -154,162 +171,6 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
     }
     if (key == GLFW_KEY_F1 && action == GLFW_PRESS) {
         enableMouse = !enableMouse;
-    }
-
-    switch (theEditMode)
-    {
-        case MOVING_CAMERA:
-        {
-            const float CAMERA_MOVE_SPEED = 1.f;
-            if (key == GLFW_KEY_A)     // Left
-            {
-                ::cameraEye.x -= CAMERA_MOVE_SPEED;
-            }
-            if (key == GLFW_KEY_D)     // Right
-            {
-                ::cameraEye.x += CAMERA_MOVE_SPEED;
-            }
-            if (key == GLFW_KEY_W)     // Forward
-            {
-                ::cameraEye.z += CAMERA_MOVE_SPEED;
-            }
-            if (key == GLFW_KEY_S)     // Backwards
-            {
-                ::cameraEye.z -= CAMERA_MOVE_SPEED;
-            }
-            if (key == GLFW_KEY_Q)     // Down
-            {
-                ::cameraEye.y -= CAMERA_MOVE_SPEED;
-            }
-            if (key == GLFW_KEY_E)     // Up
-            {
-                ::cameraEye.y += CAMERA_MOVE_SPEED;
-            }
-        }
-        break;
-        case MOVING_SELECTED_OBJECT:
-        {
-            const float OBJECT_MOVE_SPEED = 1.f;
-            if (key == GLFW_KEY_A)     // Left
-            {
-                meshArray[object_index]->position.x -= OBJECT_MOVE_SPEED;
-            }
-            if (key == GLFW_KEY_D)     // Right
-            {
-                meshArray[object_index]->position.x += OBJECT_MOVE_SPEED;
-            }
-            if (key == GLFW_KEY_W)     // Forward
-            {
-                meshArray[object_index]->position.z += OBJECT_MOVE_SPEED;
-            }
-            if (key == GLFW_KEY_S)     // Backwards
-            {
-                meshArray[object_index]->position.z -= OBJECT_MOVE_SPEED;
-            }
-            if (key == GLFW_KEY_Q)     // Down
-            {
-                meshArray[object_index]->position.y -= OBJECT_MOVE_SPEED;
-            }
-            if (key == GLFW_KEY_E)     // Up
-            {
-                meshArray[object_index]->position.y += OBJECT_MOVE_SPEED;
-            }
-
-            // Cycle through objects in the scene
-            if (key == GLFW_KEY_1 && action == GLFW_PRESS)
-            {
-                if (!enableMouse) cameraTarget = glm::vec3(0.f, 0.f, 0.f);
-            }
-            if (key == GLFW_KEY_2 && action == GLFW_PRESS)
-            {
-                object_index++;
-                if (object_index > meshArray.size()-1) {
-                    object_index = 0;
-                }
-                if (!enableMouse) cameraTarget = meshArray[object_index]->position;
-            }
-            if (key == GLFW_KEY_3 && action == GLFW_PRESS)
-            {
-                object_index--;
-                if (object_index < 0) {
-                    object_index = meshArray.size() - 1;
-                }
-                if (!enableMouse) cameraTarget = meshArray[object_index]->position;
-            }    
-        }
-        break;
-        case TAKE_CONTROL: 
-        {
-            constexpr float PLAYER_MOVE_SPEED = 1.f;
-
-            //if (key == GLFW_KEY_W && action == GLFW_PRESS) {
-            //    player_mesh->velocity.x = PLAYER_MOVE_SPEED;
-            //    player_mesh->rotation = glm::quat(glm::vec3(0.f, 67.55f, 0.f));
-            //}
-            //if (key == GLFW_KEY_W && action == GLFW_RELEASE) {
-            //    player_mesh->KillAllForces();
-            //}
-            //if (key == GLFW_KEY_S && action == GLFW_PRESS) {
-            //    player_mesh->velocity.x = -PLAYER_MOVE_SPEED;
-            //    player_mesh->rotation = glm::quat(glm::vec3(0.f, -67.55f, 0.f));
-            //}
-            //if (key == GLFW_KEY_S && action == GLFW_RELEASE) {
-            //    player_mesh->KillAllForces();
-            //}
-            //if (key == GLFW_KEY_A && action == GLFW_PRESS) {
-            //    player_mesh->velocity.z = -PLAYER_MOVE_SPEED;
-            //    player_mesh->rotation = glm::quat(glm::vec3(0.f, 0.f, 0.f));
-            //}
-            //if (key == GLFW_KEY_A && action == GLFW_RELEASE) {
-            //    player_mesh->KillAllForces();
-            //}
-            //if (key == GLFW_KEY_D && action == GLFW_PRESS) {
-            //    player_mesh->velocity.z = PLAYER_MOVE_SPEED;
-            //    player_mesh->rotation = glm::quat(glm::vec3(0.f, 135.10f, 0.f));
-            //}
-            //if (key == GLFW_KEY_D && action == GLFW_RELEASE) {
-            //    player_mesh->KillAllForces();
-            //}
-            //if (key == GLFW_KEY_Q && action == GLFW_PRESS) {
-            //    player_mesh->velocity.y = PLAYER_MOVE_SPEED;
-            //    //player_mesh->rotation = glm::quat(glm::vec3(0.f, 1.f, 0.f));
-            //}
-            //if (key == GLFW_KEY_Q && action == GLFW_RELEASE) {
-            //    player_mesh->KillAllForces();
-            //}
-            //if (key == GLFW_KEY_E && action == GLFW_PRESS) {
-            //    player_mesh->velocity.y = -PLAYER_MOVE_SPEED;
-            //    //player_mesh->rotation = glm::quat(glm::vec3(0.f, -1.f, 0.f));
-            //}
-            //if (key == GLFW_KEY_E && action == GLFW_RELEASE) {
-            //    player_mesh->KillAllForces();
-            //}
-            if (key == GLFW_KEY_W && action == GLFW_PRESS) {
-                direction.z += PLAYER_MOVE_SPEED;
-            }
-            else if (key == GLFW_KEY_W && action == GLFW_RELEASE) {
-                direction = glm::vec3(0.f);
-            }
-            if (key == GLFW_KEY_S && action == GLFW_PRESS) {
-                direction.z -= PLAYER_MOVE_SPEED;
-            }
-            else if (key == GLFW_KEY_S && action == GLFW_RELEASE) {
-                direction = glm::vec3(0.f);
-            }
-            if (key == GLFW_KEY_A && action == GLFW_PRESS) {
-                direction.x += PLAYER_MOVE_SPEED;
-            }
-            else if (key == GLFW_KEY_A && action == GLFW_RELEASE) {
-                direction = glm::vec3(0.f);
-            }
-            if (key == GLFW_KEY_D && action == GLFW_PRESS) {
-                direction.x -= PLAYER_MOVE_SPEED;
-            }
-            else if (key == GLFW_KEY_D && action == GLFW_RELEASE) {
-                direction = glm::vec3(0.f);
-            }
-        }
-        break;
     }
 }
 
@@ -399,7 +260,7 @@ void Initialize() {
     glfwSetWindowAspectRatio(window, 16, 9);
 
     // keyboard callback
-    glfwSetKeyCallback(window, KeyCallback);
+    glfwSetKeyCallback(window, KeyboardCallback);
 
     // mouse and scroll callback
     glfwSetCursorPosCallback(window, MouseCallBack);
@@ -430,7 +291,7 @@ void Initialize() {
     physicsWorld = physicsFactory->CreateWorld();
 
     // Set Gravity
-    physicsWorld->SetGravity(glm::vec3(0.f, 0.f, 0.f));
+    physicsWorld->SetGravity(glm::vec3(0.f, -9.8f, 0.f));
 
     x = 0.1f; y = 0.5f; z = 19.f;
 }
@@ -483,29 +344,32 @@ void Render() {
 
     CreateFlatPlane();
 
+    // player ball created here
     CreatePlayerBall();
 
+    // load the moon
     CreateMoon();
 
+    // other balls created here
     CreateBall("ball0", glm::vec3(20, 2, 0), glm::vec4(100, 0, 0, 1), 2.f);
     CreateBall("ball1", glm::vec3(0, 2, 20), glm::vec4(0, 100, 0, 1), 1.f);
     CreateBall("ball2", glm::vec3(0, 2, -20), glm::vec4(0, 0, 100, 1), 1.25f);
     CreateBall("ball3", glm::vec3(-20, 2, 0), glm::vec4(100, 100, 0, 1), 1.5f);
 
-    CreateWall("wall0", glm::vec3(100, 0, 0), glm::vec3(0.f, 67.55f, 0.f), 1.f);
-    CreateWall("wall1", glm::vec3(-100, 0, 0), glm::vec3(0.f, -67.55f, 0.f), 1.f);
-    CreateWall("wall2", glm::vec3(0, 0, 100), glm::vec3(0.f), 1.f);
-    CreateWall("wall3", glm::vec3(0, 0, -100), glm::vec3(0.f, 135.1f, 0.f), 1.f);
+    // arena walls created here
+    CreateWall("wall0", glm::vec3(100, 0, 0), glm::vec3(0.f, 67.55f, 0.f), glm::vec3(1, 0, 0), 1.f);
+    CreateWall("wall1", glm::vec3(-100, 0, 0), glm::vec3(0.f, -67.55f, 0.f), glm::vec3(-1, 0, 0), 1.f);
+    CreateWall("wall2", glm::vec3(0, 0, 100), glm::vec3(0.f), glm::vec3(0, 0, 1), 1.f);
+    CreateWall("wall3", glm::vec3(0, 0, -100), glm::vec3(0.f, 135.1f, 0.f), glm::vec3(0, 0, -1), 1.f);
     
+    // skybox model and textures loaded here
     CreateSkyBoxSphere();
 
+    // textures loaded here
     LoadTextures();
 
-    // reads scene descripion files for positioning and other info
-    //ReadSceneDescription();
-
-    //player_mesh->SetUniformScale(2.5f);
-    
+    physicsWorld->SetGravity(glm::vec3(0.f, 0.f, 0.f));
+    bulb_mesh->position = player_mesh->position - glm::vec3(0.f, -25.f, 75.f);
 }
 
 void Update() {
@@ -548,30 +412,49 @@ void Update() {
     GLint eyeLocationLocation = glGetUniformLocation(shaderID, "eyeLocation");
     glUniform4f(eyeLocationLocation, cameraEye.x, cameraEye.y, cameraEye.z, 1.f);
 
-    if (theEditMode == TAKE_CONTROL) {
-        cameraEye = player_mesh->position - glm::vec3(0.f, -4.f, 35.f);
-        if (!enableMouse) {
-            cameraTarget = player_mesh->position;
+    if (!enableMouse) {
+        // set the camera to always look at the player ball
+        cameraTarget = player_mesh->position;
+
+        float bounds = 100.f;
+
+        // if the camera goes beyond set bounds
+        if (cameraEye.x < -bounds)
+        {
+            cameraEye.x = -bounds;
+        }
+
+        if (cameraEye.x > bounds)
+        {
+            cameraEye.x = bounds;
+        }
+
+        if (cameraEye.z < -bounds)
+        {
+            cameraEye.z = -bounds;
+        }
+
+        if (cameraEye.z > bounds)
+        {
+            cameraEye.z = bounds;
         }
     }
 
-    bulb_mesh->position = player_mesh->position - glm::vec3(0.f, -25.f, 75.f);
-
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-        mouseClick = true;
-    }
-    else mouseClick = false;
-
+    // convert player colliding body to rigid body
     physics::iRigidBody* rigidBody = dynamic_cast<physics::iRigidBody*>(player_mesh->collisionBody);
 
+    // check if they need physics applied to them
     if (rigidBody != nullptr) {
+
         float force = 0.15f;
         float damping = 0.9f;
         
+        // direction coming in from user inputs
         rigidBody->ApplyTorque((direction * force) * damping);
         rigidBody->ApplyForce((direction * force) * damping);
-        //rigidBody->ApplyImpulse((direction * force) * damping);
         rigidBody->ApplyForceAtPoint(direction * force, glm::vec3(0.f, 5.f, 0.f));
+
+        //rigidBody->ApplyImpulse((direction * force) * damping);
         //rigidBody->ApplyImpulseAtPoint(direction * force, glm::vec3(0.f, 5.f, 0.f));
 
         rigidBody->GetPosition(player_mesh->position);
@@ -582,22 +465,23 @@ void Update() {
 
         cMeshInfo* currentMesh = meshArray[i];
 
+        // Check if any objects on the drawing array need physics applied
         if (currentMesh->collisionBody != nullptr) {
 
+            // convert all collision bodies to rigid bodies
             physics::iRigidBody* rigidBody = dynamic_cast<physics::iRigidBody*>(currentMesh->collisionBody);
 
             glm::vec3 position;
-            //glm::quat rotation;
 
             rigidBody->GetPosition(position);
             rigidBody->GetRotation(currentMesh->rotation);
             
-            //currentMesh->rotation = rotation;
             currentMesh->position = position;
 
             float bounds = 100.f;
             float response = 2.f;
 
+            // if the object attempts to leave the set bounds
             if (position.x < -bounds)
             {
                 rigidBody->ApplyForce(glm::vec3(response, 0.f, 0.f));
@@ -627,13 +511,6 @@ void Update() {
 
         glm::mat4 translationMatrix = glm::translate(glm::mat4(1.f), currentMesh->position);
         glm::mat4 scaling = glm::scale(glm::mat4(1.f), currentMesh->scale);
-
-        /*glm::mat4 scaling = glm::scale(glm::mat4(1.f), glm::vec3(currentMesh->scale.x,
-                                                                 currentMesh->scale.y,
-                                                                 currentMesh->scale.z));*/
-        if (currentMesh->isSkyBoxMesh) {
-            model = glm::mat4x4(1.f);
-        }
 
         glm::mat4 rotation = glm::mat4(currentMesh->rotation);
 
@@ -723,24 +600,6 @@ void Update() {
             glUniform1f(doNotLightLocation, (GLfloat)GL_FALSE);
         }
 
-        // Uncomment to:
-        // Randomize the positions of ALL the objects
-        // in the scene post every x amount of frames
-        // Cause why not?
-
-        //elapsed_frames++;
-        //if (elapsed_frames > 100) {
-        //    //for (int j = 0; j < meshArray.size(); j++) {
-        //    //    cMeshInfo* theMesh = meshArray[j];
-        //    //    RandomizePositions(theMesh);
-        //    //}
-        //    player_mesh->KillAllForces();
-        //    elapsed_frames = 0;
-        //}
-
-        // adds the model's velocity to its current position
-        //currentMesh->TranslateOverTime(0.5f);
-        
         // Physics update step
         physicsWorld->TimeStep(0.06f);
 
@@ -749,12 +608,6 @@ void Update() {
         // Division is expensive
         cursorPos.x = width * 0.5f;
         cursorPos.y = height * 0.5f;
-
-        glm::vec3 worldSpaceCoordinates = glm::unProject(cursorPos, view, projection, viewport);
-        
-        glm::normalize(worldSpaceCoordinates);
-        
-        if (mouseClick) {}
 
         GLint bIsSkyboxObjectLocation = glGetUniformLocation(shaderID, "bIsSkyboxObject");
 
@@ -775,7 +628,6 @@ void Update() {
         else {
             glUniform1f(bIsSkyboxObjectLocation, (GLfloat)GL_FALSE);
         }
-
         
         sModelDrawInfo modelInfo;
         if (VAOMan->FindDrawInfoByModelName(meshArray[i]->meshName, modelInfo)) {
@@ -830,8 +682,7 @@ void Update() {
 
         std::stringstream ss;
         ss << " Camera: " << "(" << cameraEye.x << ", " << cameraEye.y << ", " << cameraEye.z << ")"
-           << " Target: Index = " << object_index << ", MeshName: " << meshArray[object_index]->friendlyName << ", Position: (" << meshArray[object_index]->position.x << ", " << meshArray[object_index]->position.y << ", " << meshArray[object_index]->position.z << ")"
-           << " FPS: " << frameRate << " ms: " << frameTime;
+           << "   GPU: " << renderer << "    FPS: " << frameRate << " ms: " << frameTime;
 
         glfwSetWindowTitle(window, ss.str().c_str());
 
@@ -990,7 +841,7 @@ void CreateFlatPlane() {
     plain_mesh->hasTexture = false;
     plain_mesh->isVisible = true;
 
-    physics::iShape* planeShape = new physics::PlaneShape(0.0f, glm::vec3(0.f, 1.f, 0.f));
+    physics::iShape* planeShape = new physics::PlaneShape(1.0f, glm::vec3(0.f, 1.f, 0.f));
     physics::RigidBodyDesc description;
     description.isStatic = true;
     description.mass = 0.f;
@@ -1064,7 +915,7 @@ void CreateBall(std::string modelName, glm::vec3 position, glm::vec4 color, floa
     meshArray.push_back(ball);
 }
 
-void CreateWall(std::string modelName, glm::vec3 position, glm::vec3 rotation, float mass) {
+void CreateWall(std::string modelName, glm::vec3 position, glm::vec3 rotation, glm::vec3 normal, float mass) {
 
     cMeshInfo* wall = new cMeshInfo();
     wall->meshName = "flat_plain";
@@ -1076,7 +927,7 @@ void CreateWall(std::string modelName, glm::vec3 position, glm::vec3 rotation, f
     wall->RGBAColour = glm::vec4(100.f, 100.f, 100.f, 1.f);
     wall->useRGBAColour = true;
 
-    physics::iShape* planeShape = new physics::PlaneShape(0.0f, glm::vec3(0.f, 1.f, 0.f));
+    physics::iShape* planeShape = new physics::PlaneShape(0.0f, normal);
     physics::RigidBodyDesc description;
     description.isStatic = true;
     description.mass = mass;

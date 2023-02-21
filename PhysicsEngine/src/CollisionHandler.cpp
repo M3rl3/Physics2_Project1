@@ -321,14 +321,13 @@ namespace physics
 					}
 					else
 					{
-						// We don't know this type of body
+						// don't know this type of body
 					}
 				}
 				else
 				{
-					// We don't know this type of body
+					// don't know this type of body
 				}
-
 
 				if (collision)
 				{
@@ -357,7 +356,7 @@ namespace physics
 			}
 			else if (shapeB->GetShapeType() == ShapeType::Box)
 			{
-				// CollideSphereBox(dt, bodyA, SphereShape::Cast(shapeA), bodyB, BoxShape::Cast(shapeB));
+				//CollideSphereBox(dt, bodyA, SphereShape::Cast(shapeA), bodyB, BoxShape::Cast(shapeB));
 			}
 			else
 			{
@@ -372,16 +371,16 @@ namespace physics
 			}
 			else if (shapeB->GetShapeType() == ShapeType::Plane)
 			{
-				// nope...
+				// Dont have plane plane collisions atm.
 			}
 			else
 			{
-				// We don't have this handled at the moment.
+				// Don't have this handled at the moment.
 			}
 		}
 		else
 		{
-			// We don't have this handled at the moment.
+			// Don't have this handled at the moment.
 		}
 
 		return collision;
