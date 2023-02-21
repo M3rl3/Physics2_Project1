@@ -682,7 +682,7 @@ void Update() {
 
         std::stringstream ss;
         ss << " Camera: " << "(" << cameraEye.x << ", " << cameraEye.y << ", " << cameraEye.z << ")"
-           << "   GPU: " << renderer << "    FPS: " << frameRate << " ms: " << frameTime;
+           << "    GPU: " << renderer << "    FPS: " << frameRate << " ms: " << frameTime;
 
         glfwSetWindowTitle(window, ss.str().c_str());
 
